@@ -4,7 +4,11 @@ import path from "path";
 
 export async function GET() {
   try {
-    const filePath = path.join(process.cwd(), "script", "home_data.json");
+    const filePath = path.join(
+      process.cwd(),
+      "script",
+      "redfin_home_data.json"
+    );
     const jsonData = await fs.readFile(filePath, "utf8");
     const homeData = JSON.parse(jsonData);
 
