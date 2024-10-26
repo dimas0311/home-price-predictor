@@ -6,18 +6,20 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { getHomeData } from "../../utils/gethomedata";
+import { getRedfinHomeData } from "../../utils/getredfinhomedata";
 import { getStateData } from "../../utils/getstatedata";
 
 const DataContext = createContext();
 
 const HOME_STORE = "homeData";
+const ALL_STORE = "allData";
 const STATE_STORE = "stateData";
 const TIMESTAMP_KEY = "dataTimestamp";
 
 export const HomeDataProvider = ({ children }) => {
   const [homeData, setHomeData] = useState([]);
   const [stateData, setStateData] = useState([]);
+  const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const saveToStorage = (key, data) => {
@@ -41,11 +43,13 @@ export const HomeDataProvider = ({ children }) => {
   const getAllData = useCallback(async () => {
     setLoading(true);
     try {
+      const cachedAllData = getFromStorage(ALL_STORE);
       const cachedHomeData = getFromStorage(HOME_STORE);
       const cachedStateData = getFromStorage(STATE_STORE);
       const cachedTimestamp = getFromStorage(TIMESTAMP_KEY);
 
       if (
+        cachedAllData &&
         cachedHomeData &&
         cachedStateData &&
         cachedTimestamp &&
@@ -53,11 +57,17 @@ export const HomeDataProvider = ({ children }) => {
       ) {
         setHomeData(cachedHomeData);
         setStateData(cachedStateData);
+        setAllData(cachedAllData);
         setLoading(false);
         return;
       }
 
-      const prehomeData = await getHomeData();
+      const allHomeData = await getRedfinHomeData();
+      const prehomeData = allHomeData.filter(
+        (home) =>
+          home.image_link !==
+          "https://ssl.cdn-redfin.com/photo/92/islphoto/870/genIslnoResize.3231870_0.jpg"
+      );
       const prestateData = await getStateData();
 
       function shuffleArray(array) {
@@ -70,10 +80,12 @@ export const HomeDataProvider = ({ children }) => {
 
       const combinedData = shuffleArray(prehomeData);
 
+      saveToStorage(ALL_STORE, allHomeData);
       saveToStorage(HOME_STORE, combinedData);
       saveToStorage(STATE_STORE, prestateData);
       saveToStorage(TIMESTAMP_KEY, Date.now());
 
+      setAllData(allHomeData);
       setHomeData(combinedData);
       setStateData(prestateData);
     } catch (error) {
@@ -89,7 +101,13 @@ export const HomeDataProvider = ({ children }) => {
 
   return (
     <DataContext.Provider
-      value={{ homeData, stateData, loading, refreshEvents: getAllData }}>
+      value={{
+        allData,
+        homeData,
+        stateData,
+        loading,
+        refreshEvents: getAllData,
+      }}>
       {children}
     </DataContext.Provider>
   );
