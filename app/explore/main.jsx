@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useData } from "../hooks/useData";
 import { AutoComplete, Input, Button, DatePicker, Slider } from "antd";
 import PriceRangeSlider from "@/app/components/slider";
+import MapView from "@/app/components/map";
 import axios from "axios";
 import moment from "moment";
 
@@ -14,7 +15,7 @@ const { RangePicker } = DatePicker;
 
 export const MainPage = () => {
   const redfinLink = "www.redfin/com";
-  const { homeData, stateData, loading } = useData();
+  const { homeData, stateData, loading, allData } = useData();
 
   const [filteredData, setFilteredData] = useState(homeData);
   const [bedsSearchTerm, setBedsSearchTerm] = useState("");
@@ -32,9 +33,10 @@ export const MainPage = () => {
     setFilteredData(homeData);
   }, [homeData]);
   console.log("hn", homeData?.length);
-  console.log("sn", stateData?.length);
-  console.log("sn", stateData?.slice(0, 3));
-  console.log("hn", homeData?.slice(0, 3));
+  console.log("all_data", allData?.length);
+  // console.log("sn", stateData?.length);
+  // console.log("sn", stateData?.slice(0, 3));
+  // console.log("hn", homeData?.slice(0, 3));
 
   const cityOptions = Array.from(
     new Set(
@@ -70,8 +72,8 @@ export const MainPage = () => {
       setSelectedCityData(null);
     }
   };
-  console.log("=============citySearchTerm===============", citySearchTerm);
-  console.log("===========selectedCityData==============", selectedCityData);
+  // console.log("=============citySearchTerm===============", citySearchTerm);
+  // console.log("===========selectedCityData==============", selectedCityData);
 
   const handleClearSearch = () => {
     setBedsSearchTerm("");
@@ -130,18 +132,19 @@ export const MainPage = () => {
 
   const inputStyle = {
     fontFamily: "Helvetica",
-    height: "40px",
-    fontSize: "16px",
+    height: "45px",
+    fontSize: "26px",
   };
 
   return (
     <div className="min-h-screen bg-black font-helvetica">
       {!loading ? (
-        <div className="px-6 pt-[80px] mx-auto max-w-[100rem] lg:px-8">
+        <div className="px-6 pt-[80px] mx-auto max-w-[160rem] lg:px-8">
           <div className="flex flex-col items-center w-full space-y-3 p-2 rounded-lg shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 w-full max-w-8xl">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-8xl">
               <AutoComplete
                 className="w-full"
+                style={{ fontFamily: "40px" }}
                 options={options}
                 onSearch={onBedsSearch}
                 onSelect={(value) => setBedsSearchTerm(value)}
@@ -186,23 +189,25 @@ export const MainPage = () => {
                   style={inputStyle}
                 />
               </AutoComplete>
-              <button
-                onClick={handleSearch}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-xl font-semibold"
-                style={{ fontFamily: "Helvetica" }}
-              >
-                Search
-              </button>
-              <button
-                onClick={handleClearSearch}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-xl font-semibold"
-                style={{ fontFamily: "Helvetica" }}
-              >
-                Clear
-              </button>
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-1 w-full max-w-8xl">
+                <button
+                  onClick={handleSearch}
+                  className="bg-green-400 text-black px-10 py-1 rounded-lg sm:text-xl md:text-xl lg:text-4xl hover:bg-green-500 text-3xl font-semibold "
+                  style={{ fontFamily: "Helvetica" }}
+                >
+                  Search
+                </button>
+                <button
+                  onClick={handleClearSearch}
+                  className="bg-green-400 text-black px-10 py-1 rounded-lg  sm:text-xl  md:text-xl lg:text-4xl hover:bg-green-500 text-3xl font-semibold "
+                  style={{ fontFamily: "Helvetica" }}
+                >
+                  Clear
+                </button>
+              </div>
             </div>
             <div className="w-full max-w-7xl">
-              {/* <p className="text-white">Price Range:</p> */}
+              {/* <p className="text-black">Price Range:</p> */}
               <PriceRangeSlider
                 min={0}
                 max={10000000}
@@ -217,9 +222,9 @@ export const MainPage = () => {
               style={{ fontFamily: "Helvetica" }}
             >
               <h2 className="text-xl font-semibold text-white mb-2">
-                {selectedCityData.city}, {selectedCityData.state}
+                {selectedCityData.city}
               </h2>
-              <p className="text-gray-300 mb-2 text-xl">
+              <p className="text-white mb-2 text-xl">
                 {selectedCityData.description}
               </p>
               <div className="flex justify-between text-xl">
@@ -234,84 +239,102 @@ export const MainPage = () => {
           )}
           <div className="w-full h-px bg-zinc-800 my-2" />
 
-          <div
-            className="grid grid-cols-1 gap-4 mx-auto lg:mx-0 md:grid-cols-2 lg:grid-cols-4"
-            style={{ fontFamily: "Helvetica" }}
-          >
-            {filteredData.slice(0, displayCount).map((home, key) => (
-              <div key={key} className="grid grid-cols-1 gap-4 cursor-pointer">
-                <Card className="">
-                  <Link href={home?.home_url} target="blank">
-                    <div className="cursor-pointer w-full h-[200px] relative">
-                      <Image
-                        className="rounded-t-xl overflow-hidden object-cover"
-                        src={home?.image_link}
-                        alt={home?.address}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </div>
-                    <div className="p-1 rounded-b-xl">
-                      <div className="flex flex-row items-center justify-between">
-                        <h1 className="text-2xl font-semibold text-white">
-                          {home?.price}
-                        </h1>
-                        {home?.beds ? (
-                          <span className="text-md bg-purple-600 text-white px-2 rounded-full truncate">
-                            {home?.beds}
-                          </span>
-                        ) : (
-                          <div></div>
-                        )}
-                        <span className="text-md bg-orange-600 text-white px-2 rounded-full truncate">
-                          {home?.baths}
-                        </span>
-                        {home?.area ? (
-                          <span className="text-md bg-lime-500 text-white px-2 rounded-full truncate">
-                            {home?.area} sq ft
-                          </span>
-                        ) : (
-                          <div></div>
-                        )}
-                      </div>
-                      {home?.address ? (
-                        <p className="text-xl text-gray-300 truncate">
-                          {home?.address}
-                        </p>
-                      ) : (
-                        <div>
-                          <br></br>
-                        </div>
-                      )}
-                      <div className="flex flex-row items-center justify-center space-x-3">
-                        <h1 className="text-lg bg-green-600 text-white px-6  rounded-full truncate">
-                          {home?.city}
-                        </h1>
-                        <h1 className="text-lg bg-blue-600 text-white px-6 rounded-full">
-                          {home?.country}
-                        </h1>
-                        <h1 className="text-lg bg-red-600 text-white px-6 rounded-full">
-                          {home?.source}
-                        </h1>
-                      </div>
-                    </div>
-                  </Link>
-                </Card>
-              </div>
-            ))}
-          </div>
-          <div className="w-full flex justify-center mt-8">
-            {displayCount < filteredData.length && (
-              <p
-                onClick={() => setDisplayCount((prevCount) => prevCount + 60)}
-                type="primary"
-                size="large"
-                className="text-green-400 hover:text-green-500 text-xl mb-10 hover:cursor-pointer font-semibold"
+          <div className="grid grid-cols-2">
+            <div>
+              <div
+                className="grid grid-cols-1 gap-4 mx-auto lg:mx-0 md:grid-cols-2 lg:grid-cols-2"
                 style={{ fontFamily: "Helvetica" }}
               >
-                More data
-              </p>
-            )}
+                {filteredData.slice(0, displayCount).map((home, key) => (
+                  <div
+                    key={key}
+                    className="grid grid-cols-1 gap-4 cursor-pointer"
+                  >
+                    <Card className="">
+                      <Link href={home?.home_url} target="blank">
+                        <div className="cursor-pointer w-full h-[200px] relative">
+                          <Image
+                            className="rounded-t-xl overflow-hidden object-cover"
+                            src={home?.image_link}
+                            alt={home?.address}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                        <div className="p-1 rounded-b-xl">
+                          <div className="flex flex-row items-center justify-between space-x-1">
+                            <h1 className="text-xl font-semibold bg-yellow-400 rounded-lg text-black px-1">
+                              {home?.price}
+                            </h1>
+                            {home?.beds ? (
+                              <span className="text-xl bg-purple-400 text-black rounded-lg truncate px-1">
+                                {home?.beds}
+                              </span>
+                            ) : (
+                              <div></div>
+                            )}
+                            <span className="text-xl bg-orange-400 text-black rounded-lg truncate px-1">
+                              {home?.baths}
+                            </span>
+                            {home?.area ? (
+                              <span className="text-xl bg-lime-400 text-black rounded-lg truncate px-1">
+                                {home?.area} sq ft
+                              </span>
+                            ) : (
+                              <div></div>
+                            )}
+                          </div>
+                          {home?.address ? (
+                            <p className="text-2xl text-gray-300 truncate text-center">
+                              {home?.address}
+                            </p>
+                          ) : (
+                            <div>
+                              <br></br>
+                            </div>
+                          )}
+                          <div className="flex flex-row items-center justify-center space-x-3">
+                            <h1 className="text-2xl bg-green-400 text-black px-6  rounded-lg truncate">
+                              {home?.city}
+                            </h1>
+                            <h1 className="text-2xl bg-blue-400 text-black px-6 rounded-lg">
+                              {home?.country === "United Kingdom"
+                                ? "UK"
+                                : home?.country}
+                            </h1>
+                            <h1 className="text-2xl bg-red-400 text-black px-6 rounded-lg">
+                              {home?.source}
+                            </h1>
+                          </div>
+                        </div>
+                      </Link>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+              <div className="w-full flex justify-center mt-8">
+                {displayCount < filteredData.length && (
+                  <p
+                    onClick={() =>
+                      setDisplayCount((prevCount) => prevCount + 60)
+                    }
+                    type="primary"
+                    size="large"
+                    className="text-green-400 hover:text-green-500 text-xl mb-10 hover:cursor-pointer font-semibold"
+                    style={{ fontFamily: "Helvetica" }}
+                  >
+                    More data
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="">
+              <MapView
+                web3eventMap={allData}
+                cityOptions={cityOptions}
+                citySearchTerm={citySearchTerm}
+              />
+            </div>
           </div>
         </div>
       ) : (
