@@ -86,14 +86,25 @@ class JamesEditionScraper:
     def extract_number_from_text(self, text):
         if not text:
             return 'N/A'
-        numbers = re.findall(r'\d+(?:\.\d+)?', text)
-        return numbers[0] if numbers else 'N/A'
+        # Improved number extraction to handle various formats
+        numbers = re.findall(r'[\d,]+(?:\.?\d*)?', text)
+        if numbers:
+            # Remove commas and convert to float
+            clean_number = numbers[0].replace(',', '')
+            try:
+                return float(clean_number)
+            except ValueError:
+                return 'N/A'
+        return 'N/A'
 
     def convert_sqm_to_sqft(self, sqm_str):
         try:
-            sqm = float(self.extract_number_from_text(sqm_str))
-            sqft = round(sqm * 10.764, 2)
-            return f"{sqft:,.2f} sq ft"
+            # Handle different area formats
+            sqm = self.extract_number_from_text(sqm_str)
+            if sqm != 'N/A':
+                sqft = round(float(sqm) * 10.764, 2)
+                return f"{sqft:,.2f} sq ft"
+            return "N/A"
         except (ValueError, TypeError):
             return "N/A"
 
@@ -133,32 +144,81 @@ class JamesEditionScraper:
 
     def extract_listing_data(self, listing):
         try:
-            # Random delay before extracting data
             time.sleep(random.uniform(0.5, 1.5))
 
-            # Extract price
+            # Scroll element into view and wait for it to load
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView(true);", listing)
+            time.sleep(random.uniform(1, 2))
+
+            # Extract price (unchanged)
             price_eur = listing.find_element(
                 By.CLASS_NAME, 'ListingCard__price').text.strip()
             price_usd = self.convert_eur_to_usd(price_eur)
             price_value = ''.join(filter(str.isdigit, price_eur))
 
-            # Extract all tags
+            # Improved image extraction
+            try:
+                # Try multiple selectors for images
+                image_selectors = [
+                    '.je2-single-slider__slides img.je2-lazy-load',
+                    '.je2-single-slider__slides img[src]',
+                    '.ListingCard__image img[src]',
+                    '.ListingCard__image source[srcset]'
+                ]
+
+                image_links = []
+                for selector in image_selectors:
+                    images = listing.find_elements(By.CSS_SELECTOR, selector)
+                    for img in images:
+                        # Try both src and data-src attributes
+                        src = img.get_attribute(
+                            'src') or img.get_attribute('data-src')
+                        if src and src.strip() and not src.endswith('placeholder.jpg'):
+                            image_links.append(src)
+                            break
+                    if image_links:
+                        break
+
+                image_link = image_links[0] if image_links else 'N/A'
+            except Exception as e:
+                print(f"Error extracting image: {str(e)}")
+                image_link = 'N/A'
+
+            # Improved area extraction
             tags = listing.find_elements(By.CLASS_NAME, 'ListingCard__tag')
             beds = baths = area_sqm = 'N/A'
 
+            # Process all possible area formats
+            area_patterns = [
+                r'(\d[\d,\.]*)\s*(?:m²|sqm|sq\.m|square meters)',
+                r'(\d[\d,\.]*)\s*(?:ft²|sqft|sq\.ft|square feet)'
+            ]
+
             for tag in tags:
-                tag_text = tag.text.strip()
-                if 'Beds' in tag_text:
+                tag_text = tag.text.strip().lower()
+
+                if 'bed' in tag_text:
                     beds = self.format_number(tag_text, ' beds')
-                elif 'Baths' in tag_text:
+                elif 'bath' in tag_text:
                     baths = self.format_number(tag_text, ' baths')
-                elif 'Sqm' in tag_text:
-                    area_sqm = tag_text
+                else:
+                    # Check for area in different formats
+                    for pattern in area_patterns:
+                        match = re.search(pattern, tag_text, re.IGNORECASE)
+                        if match:
+                            area_value = match.group(1).replace(',', '')
+                            if 'ft' in tag_text:
+                                # Convert sq ft to sq m first
+                                area_sqm = f"{float(area_value) / 10.764:.2f} sqm"
+                            else:
+                                area_sqm = f"{float(area_value)} sqm"
+                            break
 
             # Convert area to sq ft
             area_sqft = self.convert_sqm_to_sqft(area_sqm)
 
-            # Extract title/address
+            # Extract address (unchanged)
             title_element = listing.find_element(
                 By.CLASS_NAME, 'ListingCard__title')
             full_address = title_element.text.strip()
@@ -170,20 +230,7 @@ class JamesEditionScraper:
             address_country = address_parts[-1] if len(
                 address_parts) > 2 else ''
 
-            # Extract images with random delays
-            images = listing.find_elements(
-                By.CSS_SELECTOR, '.je2-single-slider__slides img.je2-lazy-load')
-            image_links = []
-            for img in images:
-                src = img.get_attribute('src')
-                if src and src.strip():
-                    image_links.append(src)
-                time.sleep(random.uniform(0.1, 0.3))
-
-            # Get main image
-            image_link = image_links[0] if image_links else 'N/A'
-
-            # Extract listing URL
+            # Get listing URL
             home_url = listing.find_element(
                 By.CSS_SELECTOR, 'a.js-link').get_attribute('href')
 
@@ -204,12 +251,11 @@ class JamesEditionScraper:
                 'timestamp': datetime.now().isoformat()
             }
 
-            # Save each listing as it's processed
             self.save_listing_to_json(listing_data)
             return listing_data
 
-        except NoSuchElementException as e:
-            print(f"Error extracting data: {str(e)}")
+        except Exception as e:
+            print(f"Error extracting listing data: {str(e)}")
             return None
 
     def random_sleep(self, min_time=3, max_time=7):
@@ -363,7 +409,7 @@ class JamesEditionScraper:
 
 
 def main():
-    base_url = "https://www.jamesedition.com/real_estate/portugal?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}"
+    base_url = "https://www.jamesedition.com/real_estate/mexico?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}"
 
     scraper = JamesEditionScraper()
     try:
