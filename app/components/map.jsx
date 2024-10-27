@@ -13,37 +13,62 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
   const [map, setMap] = useState(null);
   const [popup, setPopup] = useState(null);
   const [locationOptions, setLocationOptions] = useState([]);
-  console.log(web3eventMap?.slice(0, 3), "==================");
 
   useEffect(() => {
     setPageIsMounted(true);
 
     const map = new mapboxgl.Map({
       container: "web3eventMap",
-      center: [-100, 56], // Centered on Europe
-      zoom: 2.5,
+      center: [-98.5, 39.8],
+      zoom: 4,
       attributionControl: false,
     });
-
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }));
 
-    initializeMap(map);
-    setMap(map);
+    // Wait for map to load before setting it
+    map.on("load", () => {
+      initializeMap(map);
+      setMap(map);
+    });
 
     return () => {
       map.remove();
     };
   }, []);
 
+  // Handle data updates
   useEffect(() => {
-    if (pageIsMounted && map && web3eventMap) {
-      const data = convertPreDataToGeoJSON(web3eventMap);
+    if (!map || !web3eventMap) return;
 
-      map.on("load", () => {
-        addDataLayer(map, data);
-      });
+    // Check if map is loaded
+    if (!map.loaded()) {
+      map.on("load", () => updateMapData());
+      return;
     }
-  }, [pageIsMounted, map, web3eventMap]);
+
+    updateMapData();
+
+    function updateMapData() {
+      // Remove existing source and layers if they exist
+      if (map.getSource("web3events")) {
+        [
+          "event-description",
+          "unclustered-point",
+          "cluster-count",
+          "clusters",
+        ].forEach((layer) => {
+          if (map.getLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
+        map.removeSource("web3events");
+      }
+
+      // Add new data
+      const data = convertPreDataToGeoJSON(web3eventMap);
+      addDataLayer(map, data);
+    }
+  }, [map, web3eventMap]);
 
   const web3eventListClickHandle = (event) => {
     if (!map) return;
@@ -55,30 +80,30 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
     });
 
     const popupContent = `
-            <div class="popup-container">
-                <div class="event-content">
-                    <div class="event-title">
-                        <a href="/explore/${event?.id || "#"}">${event?.price || "No data"
+      <div class="popup-container">
+        <div class="event-content">
+          <div class="event-title">
+            <a href="/explore/${event?.id || "#"}">${event?.price || "No data"
       }</a>
-                    </div>
-                    <div class="event-detail">
-                        <div class="event-time">
-                            <div class="event-clock"></div>
-                            <p>${event?.beds || "No Time"}</p>
-                        </div>
-                        <div class="event-place">
-                            <div class="event-location"></div>
-                            <p>${event?.address || "No Address"}</p>
-                        </div>
-                    </div>
-                </div>
+          </div>
+          <div class="event-detail">
+            <div class="event-time">
+              <div class="event-clock"></div>
+              <p>${event?.beds || "No Time"}</p>
             </div>
-        `;
+            <div class="event-place">
+              <div class="event-location"></div>
+              <p>${event?.address || "No Address"}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (popup) popup.remove();
     const newPopup = new mapboxgl.Popup()
       .setLngLat(coordinates)
       .setHTML(popupContent);
-
-    if (popup) popup.remove();
     newPopup.addTo(map);
     setPopup(newPopup);
   };
@@ -140,6 +165,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
 };
 
 const addDataLayer = (map, data) => {
+  // Add source
   map.addSource("web3events", {
     type: "geojson",
     data: data,
@@ -147,6 +173,7 @@ const addDataLayer = (map, data) => {
     clusterRadius: 50,
   });
 
+  // Add layers
   map.addLayer({
     id: "clusters",
     type: "circle",
@@ -214,34 +241,34 @@ const initializeMap = (map) => {
     const point_count = features[0]?.properties?.point_count;
     const coordinates = e.lngLat;
     const source = map.getSource("web3events");
+
     source.getClusterLeaves(clusterId, point_count, 0, (error, events) => {
       if (error) {
         console.error("Error fetching cluster leaves:", error);
         return;
       }
-      const clusteredWeb3events = events;
 
       let popupHTML = '<div class="popup-container">';
       let count = 0;
 
-      clusteredWeb3events.forEach((event) => {
+      events.forEach((event) => {
         count = count + 1;
         popupHTML += `
-                    <div class="event-content">
-                        <div class="event-title">
-                            <a href="/explore/${event?.properties?.id}">${count}. ${event?.properties?.title}</a>
-                        </div>
-                        <div class="event-detail">
-                            <div class="event-time">
-                                <div class="event-clock"></div>
-                            <p>${event?.properties?.start_time}</p>
-                            </div>
-                            <div class="event-place">
-                                <div class="event-location"></div>
-                                <p>${event?.properties?.address}</p>
-                            </div>
-                        </div>
-                    </div>`;
+          <div class="event-content">
+            <div class="event-title">
+              <a href="/explore/${event?.properties?.id}">${count}. ${event?.properties?.title}</a>
+            </div>
+            <div class="event-detail">
+              <div class="event-time">
+                <div class="event-clock"></div>
+                <p>${event?.properties?.start_time}</p>
+              </div>
+              <div class="event-place">
+                <div class="event-location"></div>
+                <p>${event?.properties?.address}</p>
+              </div>
+            </div>
+          </div>`;
       });
 
       popupHTML += "</div>";
@@ -269,23 +296,23 @@ const initializeMap = (map) => {
     const web3eventProperty = features[0]?.properties;
 
     const popupHTML = `
-            <div class="popup-container">
-                <div class="event-content">
-                    <div class="event-title">
-                        <a href="/explore/${web3eventProperty?.id}">${web3eventProperty?.title}</a>
-                    </div>
-                    <div class="event-detail">
-                        <div class="event-time">
-                            <div class="event-clock"></div>
-                            <p>${web3eventProperty?.start_time}</p>
-                        </div>
-                        <div class="event-place">
-                            <div class="event-location"></div>
-                            <p>${web3eventProperty?.address}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+      <div class="popup-container">
+        <div class="event-content">
+          <div class="event-title">
+            <a href="/explore/${web3eventProperty?.id}">${web3eventProperty?.title}</a>
+          </div>
+          <div class="event-detail">
+            <div class="event-time">
+              <div class="event-clock"></div>
+              <p>${web3eventProperty?.start_time}</p>
+            </div>
+            <div class="event-place">
+              <div class="event-location"></div>
+              <p>${web3eventProperty?.address}</p>
+            </div>
+          </div>
+        </div>
+      </div>`;
 
     new mapboxgl.Popup({
       closeButton: false,
@@ -300,6 +327,7 @@ const initializeMap = (map) => {
     });
   });
 
+  // Add hover effects
   map.on("mouseenter", "clusters", () => {
     map.getCanvas().style.cursor = "pointer";
   });
@@ -343,21 +371,7 @@ const SideBar = ({
           <Input.Search size="large" placeholder="search location" />
         </AutoComplete>
       </div>
-      {/* <div className="w-full h-[calc(88vh-136px)] px-2 overflow-y-auto scroll grid gap-2">
-        {filterEvent.map((event, key) => (
-          <div
-            key={key}
-            onClick={() => onTitleClick(event)}
-            className="w-full rounded-lg border border-zinc-800 px-3 py-2"
-          >
-            <div className="text-zinc-200 font-semibold text-lg">
-              {event?.price}
-            </div>
-            <div className="text-[#11bb1c] text-sm">{event?.city}</div>
-            <div className="text-zinc-400 text-sm">{event?.country}</div>
-          </div>
-        ))}
-      </div> */}
+
       <style jsx global>{`
         .white-placeholder .ant-select-selection-search-input::placeholder,
         .white-placeholder .ant-input-search-input::placeholder {
@@ -369,7 +383,7 @@ const SideBar = ({
   );
 };
 
-function convertPreDataToGeoJSON(web3eventMap) {
+const convertPreDataToGeoJSON = (web3eventMap) => {
   const features = web3eventMap.map((event) => ({
     type: "Feature",
     properties: {
@@ -389,6 +403,6 @@ function convertPreDataToGeoJSON(web3eventMap) {
     type: "FeatureCollection",
     features,
   };
-}
+};
 
 export default MapView;
