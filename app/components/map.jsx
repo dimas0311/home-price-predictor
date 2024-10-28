@@ -108,10 +108,10 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
   };
 
   const fetchLocationSuggestions = useCallback(
-    debounce(async (value) => {
-      if (value.length > 0) {
+    debounce(async (searchTerm) => {
+      if (searchTerm?.length > 0) {
         const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          value
+          searchTerm
         )}.json`;
         const url = `${endpoint}?access_token=${mapboxgl.accessToken}&autocomplete=true&limit=5`;
 
@@ -124,6 +124,14 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
               coordinates: feature.center,
             }));
             setLocationOptions(suggestions);
+
+            // Automatically fly to the first result
+            if (map && suggestions[0]) {
+              map.flyTo({
+                center: suggestions[0].coordinates,
+                zoom: 12,
+              });
+            }
           } else {
             setLocationOptions([]);
           }
@@ -135,8 +143,14 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
         setLocationOptions([]);
       }
     }, 300),
-    []
+    [map] // Add map to dependencies since we use it in the callback
   );
+
+  useEffect(() => {
+    if (citySearchTerm) {
+      fetchLocationSuggestions(citySearchTerm);
+    }
+  }, [citySearchTerm, fetchLocationSuggestions]);
 
   const handleLocationSelect = (value, option) => {
     if (!map) return;
@@ -153,6 +167,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
         <SideBar
           web3eventMap={web3eventMap}
           onTitleClick={web3eventListClickHandle}
+          searchTerm={citySearchTerm}
           fetchLocationSuggestions={fetchLocationSuggestions}
           locationOptions={locationOptions}
           handleLocationSelect={handleLocationSelect}
