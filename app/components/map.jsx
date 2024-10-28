@@ -83,8 +83,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
       <div class="popup-container">
         <div class="event-content">
           <div class="event-title">
-            <a href="/explore/${event?.id || "#"}">${event?.price || "No data"
-      }</a>
+              event?.price || "No data"
           </div>
           <div class="event-detail">
             <div class="event-time">
@@ -256,7 +255,7 @@ const initializeMap = (map) => {
         popupHTML += `
           <div class="event-content">
             <div class="event-title">
-              <a href="/explore/${event?.properties?.id}">${count}. ${event?.properties?.title}</a>
+                ${count}. ${event?.properties?.title}
             </div>
             <div class="event-detail">
               <div class="event-time">
@@ -299,7 +298,7 @@ const initializeMap = (map) => {
       <div class="popup-container">
         <div class="event-content">
           <div class="event-title">
-            <a href="/explore/${web3eventProperty?.id}">${web3eventProperty?.title}</a>
+            ${web3eventProperty?.title}
           </div>
           <div class="event-detail">
             <div class="event-time">
