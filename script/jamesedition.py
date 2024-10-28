@@ -409,7 +409,15 @@ class JamesEditionScraper:
 
 
 def main():
-    base_url = "https://www.jamesedition.com/real_estate/mexico?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}"
+    base_urls = ["https://www.jamesedition.com/real_estate/mexico?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",]
+    "",
+    "",
 
     scraper = JamesEditionScraper()
     try:

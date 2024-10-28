@@ -6,7 +6,7 @@ import { AutoComplete, Input } from "antd";
 import Link from "next/link";
 import debounce from "lodash/debounce";
 
-const MapView = ({ web3eventMap, citySearchTerm }) => {
+const MapView = ({ allData, citySearchTerm }) => {
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   const [pageIsMounted, setPageIsMounted] = useState(false);
@@ -18,7 +18,8 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
     setPageIsMounted(true);
 
     const map = new mapboxgl.Map({
-      container: "web3eventMap",
+      container: "allData",
+      style: "mapbox://styles/mapbox/dark-v11",
       center: [-98.5, 39.8],
       zoom: 4,
       attributionControl: false,
@@ -38,7 +39,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
 
   // Handle data updates
   useEffect(() => {
-    if (!map || !web3eventMap) return;
+    if (!map || !allData) return;
 
     // Check if map is loaded
     if (!map.loaded()) {
@@ -50,7 +51,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
 
     function updateMapData() {
       // Remove existing source and layers if they exist
-      if (map.getSource("web3events")) {
+      if (map.getSource("allData")) {
         [
           "event-description",
           "unclustered-point",
@@ -61,19 +62,19 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
             map.removeLayer(layer);
           }
         });
-        map.removeSource("web3events");
+        map.removeSource("allData");
       }
 
       // Add new data
-      const data = convertPreDataToGeoJSON(web3eventMap);
+      const data = convertPreDataToGeoJSON(allData);
       addDataLayer(map, data);
     }
-  }, [map, web3eventMap]);
+  }, [map, allData]);
 
-  const web3eventListClickHandle = (event) => {
+  const homeListClickHandle = (home) => {
     if (!map) return;
 
-    const coordinates = [event?.longitude, event?.latitude];
+    const coordinates = [home?.longitude, home?.latitude];
     map.flyTo({
       center: coordinates,
       zoom: 12,
@@ -88,11 +89,11 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
           <div class="event-detail">
             <div class="event-time">
               <div class="event-clock"></div>
-              <p>${event?.beds || "No Time"}</p>
+              <p>${home?.beds || "No Time"}</p>
             </div>
             <div class="event-place">
               <div class="event-location"></div>
-              <p>${event?.address || "No Address"}</p>
+              <p>${home?.address || "No Address"}</p>
             </div>
           </div>
         </div>
@@ -165,14 +166,14 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
     <div className="px-6 mx-auto max-w-[100rem] lg:px-8 pt-1 h-screen">
       <div className="w-full flex flex-col">
         <SideBar
-          web3eventMap={web3eventMap}
-          onTitleClick={web3eventListClickHandle}
+          allData={allData}
+          onTitleClick={homeListClickHandle}
           searchTerm={citySearchTerm}
           fetchLocationSuggestions={fetchLocationSuggestions}
           locationOptions={locationOptions}
           handleLocationSelect={handleLocationSelect}
         />
-        <div id="web3eventMap" className="w-full h-[88vh]"></div>
+        <div id="allData" className="w-full h-[88vh] rounded-xl"></div>
       </div>
     </div>
   );
@@ -180,7 +181,7 @@ const MapView = ({ web3eventMap, citySearchTerm }) => {
 
 const addDataLayer = (map, data) => {
   // Add source
-  map.addSource("web3events", {
+  map.addSource("allData", {
     type: "geojson",
     data: data,
     cluster: true,
@@ -191,7 +192,7 @@ const addDataLayer = (map, data) => {
   map.addLayer({
     id: "clusters",
     type: "circle",
-    source: "web3events",
+    source: "allData",
     filter: ["has", "point_count"],
     paint: {
       "circle-color": "#5c1b92",
@@ -202,7 +203,7 @@ const addDataLayer = (map, data) => {
   map.addLayer({
     id: "cluster-count",
     type: "symbol",
-    source: "web3events",
+    source: "allData",
     filter: ["has", "point_count"],
     layout: {
       "text-field": ["get", "point_count_abbreviated"],
@@ -217,7 +218,7 @@ const addDataLayer = (map, data) => {
   map.addLayer({
     id: "unclustered-point",
     type: "circle",
-    source: "web3events",
+    source: "allData",
     filter: ["!", ["has", "point_count"]],
     paint: {
       "circle-color": "#ed60e7",
@@ -230,7 +231,7 @@ const addDataLayer = (map, data) => {
   map.addLayer({
     id: "event-description",
     type: "symbol",
-    source: "web3events",
+    source: "allData",
     filter: ["!", ["has", "point_count"]],
     layout: {
       "text-field": ["get", "title"],
@@ -254,9 +255,9 @@ const initializeMap = (map) => {
     const clusterId = features[0]?.properties?.cluster_id;
     const point_count = features[0]?.properties?.point_count;
     const coordinates = e.lngLat;
-    const source = map.getSource("web3events");
+    const source = map.getSource("allData");
 
-    source.getClusterLeaves(clusterId, point_count, 0, (error, events) => {
+    source.getClusterLeaves(clusterId, point_count, 0, (error, homes) => {
       if (error) {
         console.error("Error fetching cluster leaves:", error);
         return;
@@ -265,21 +266,25 @@ const initializeMap = (map) => {
       let popupHTML = '<div class="popup-container">';
       let count = 0;
 
-      events.forEach((event) => {
+      homes.forEach((home) => {
         count = count + 1;
         popupHTML += `
           <div class="event-content">
             <div class="event-title">
-                ${count}. ${event?.properties?.title}
+                ${count}. ${home?.properties?.price}
             </div>
             <div class="event-detail">
               <div class="event-time">
                 <div class="event-clock"></div>
-                <p>${event?.properties?.start_time}</p>
+                <p>${home?.properties?.address}</p>
               </div>
               <div class="event-place">
                 <div class="event-location"></div>
-                <p>${event?.properties?.address}</p>
+                <p>${home?.properties?.beds}</p>
+              </div>
+              <div class="event-place">
+                <div class="event-location"></div>
+                <p>${home?.properties?.baths}</p>
               </div>
             </div>
           </div>`;
@@ -307,22 +312,26 @@ const initializeMap = (map) => {
     });
 
     const coordinates = e.lngLat;
-    const web3eventProperty = features[0]?.properties;
+    const homeProperty = features[0]?.properties;
 
     const popupHTML = `
       <div class="popup-container">
         <div class="event-content">
           <div class="event-title">
-            ${web3eventProperty?.title}
+            ${homeProperty?.title}
           </div>
           <div class="event-detail">
             <div class="event-time">
               <div class="event-clock"></div>
-              <p>${web3eventProperty?.start_time}</p>
+              <p>${homeProperty?.address}</p>
             </div>
             <div class="event-place">
               <div class="event-location"></div>
-              <p>${web3eventProperty?.address}</p>
+              <p>${homeProperty?.beds}</p>
+            </div>
+            <div class="event-place">
+              <div class="event-location"></div>
+              <p>${homeProperty?.baths}</p>
             </div>
           </div>
         </div>
@@ -360,22 +369,22 @@ const initializeMap = (map) => {
 };
 
 const SideBar = ({
-  web3eventMap,
+  allData,
   onTitleClick,
   fetchLocationSuggestions,
   locationOptions,
   handleLocationSelect,
 }) => {
-  const [filterEvent, setFilterEvent] = useState(web3eventMap);
-  const options = web3eventMap.map((event) => ({
-    value: event?.name,
-    event: event,
+  const [filterHome, setFilterHome] = useState(allData);
+  const options = allData.map((home) => ({
+    value: home?.address,
+    home: home,
   }));
 
   return (
     <div className="w-[450px] bg-black py-2">
-      <div className="px-2 py-2 flex flex-col justify-center items-center">
-        <AutoComplete
+      <div className="px-2 flex flex-col justify-center items-center">
+        {/* <AutoComplete
           style={{ width: 250 }}
           options={locationOptions}
           onSearch={fetchLocationSuggestions}
@@ -383,7 +392,7 @@ const SideBar = ({
           className="white-placeholder"
         >
           <Input.Search size="large" placeholder="search location" />
-        </AutoComplete>
+        </AutoComplete> */}
       </div>
 
       <style jsx global>{`
@@ -397,19 +406,19 @@ const SideBar = ({
   );
 };
 
-const convertPreDataToGeoJSON = (web3eventMap) => {
-  const features = web3eventMap.map((event) => ({
+const convertPreDataToGeoJSON = (allData) => {
+  const features = allData.map((home) => ({
     type: "Feature",
     properties: {
-      id: event.id,
-      title: event?.price,
-      start_time: event?.address,
-      organizer: event?.beds,
-      address: event?.baths,
+      id: home.id,
+      price: home?.price,
+      address: home?.address,
+      beds: home?.beds,
+      baths: home?.baths,
     },
     geometry: {
       type: "Point",
-      coordinates: [event?.longitude, event?.latitude],
+      coordinates: [home?.longitude, home?.latitude],
     },
   }));
 

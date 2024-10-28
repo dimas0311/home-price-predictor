@@ -1,4 +1,4 @@
-"use client";
+="use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "@/app/components/card";
 import { LoadingComponent } from "@/app/components/loading";
@@ -90,21 +90,43 @@ export const MainPage = () => {
   };
 
   const bedsOptions = useMemo(() => {
-    return Array.from(new Set(homeData.map((home) => home?.beds))).map(
-      (beds) => ({
-        value: beds,
-        label: beds,
+    return Array.from(new Set(homeData.map((home) => home?.beds)))
+      .filter((beds) => beds !== "1 beds")
+      .sort((a, b) => {
+        // Handle null/undefined/dash cases
+        if (a === null || a === undefined || a === "—") return 1;
+        if (b === null || b === undefined || b === "—") return -1;
+        // Sort numerically
+        return parseFloat(a) - parseFloat(b);
       })
-    );
+      .map((beds) => ({
+        value: beds,
+        label:
+          beds === "—" ||
+            beds === null ||
+            beds === undefined ||
+            beds === "0 beds"
+            ? "— beds"
+            : `${beds}`,
+      }));
   }, [homeData]);
 
   const bathsOptions = useMemo(() => {
-    return Array.from(new Set(homeData.map((home) => home?.baths))).map(
-      (baths) => ({
-        value: baths,
-        label: baths,
+    return Array.from(new Set(homeData.map((home) => home?.baths)))
+      .sort((a, b) => {
+        // Handle null/undefined/dash cases
+        if (a === null || a === undefined || a === "—") return 1;
+        if (b === null || b === undefined || b === "—") return -1;
+        // Sort numerically
+        return parseFloat(a) - parseFloat(b);
       })
-    );
+      .map((baths) => ({
+        value: baths,
+        label:
+          baths === "—" || baths === null || baths === undefined
+            ? "— baths"
+            : `${baths}`,
+      }));
   }, [homeData]);
 
   const onBedsSearch = (searchText) => {
@@ -137,6 +159,14 @@ export const MainPage = () => {
     fontSize: "26px",
   };
 
+  const autoCompleteStyle = {
+    fontSize: "26px", // Base font size for the component
+  };
+
+  const dropdownStyle = {
+    fontSize: "26px", // Font size for dropdown items
+  };
+
   return (
     <div className="min-h-screen bg-black font-helvetica">
       {!loading ? (
@@ -145,7 +175,7 @@ export const MainPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-8xl">
               <AutoComplete
                 className="w-full"
-                style={{ fontFamily: "40px" }}
+                style={{ fontSize: "28px" }} // Add this for dropdown menu styling
                 options={options}
                 onSearch={onBedsSearch}
                 onSelect={(value) => setBedsSearchTerm(value)}
@@ -263,7 +293,16 @@ export const MainPage = () => {
                           />
                         </div>
                         <div className="p-1 rounded-b-xl">
-                          <div className="flex flex-row items-center justify-between space-x-1">
+                          {home?.address ? (
+                            <p className="text-2xl text-gray-300 truncate text-center">
+                              {home?.address}
+                            </p>
+                          ) : (
+                            <div>
+                              <br></br>
+                            </div>
+                          )}
+                          <div className="flex flex-row items-center justify-between space-x-1 mb-2">
                             <h1 className="text-xl font-semibold bg-yellow-400 rounded-lg text-black px-1">
                               {home?.price}
                             </h1>
@@ -285,25 +324,17 @@ export const MainPage = () => {
                               <div></div>
                             )}
                           </div>
-                          {home?.address ? (
-                            <p className="text-2xl text-gray-300 truncate text-center">
-                              {home?.address}
-                            </p>
-                          ) : (
-                            <div>
-                              <br></br>
-                            </div>
-                          )}
+
                           <div className="flex flex-row items-center justify-center space-x-3">
-                            <h1 className="text-2xl bg-green-400 text-black px-6  rounded-lg truncate">
+                            <h1 className="text-xl bg-green-400 text-black px-6  rounded-lg truncate">
                               {home?.city}
                             </h1>
-                            <h1 className="text-2xl bg-blue-400 text-black px-6 rounded-lg">
+                            <h1 className="text-xl bg-blue-400 text-black px-6 rounded-lg">
                               {home?.country === "United Kingdom"
                                 ? "UK"
                                 : home?.country}
                             </h1>
-                            <h1 className="text-2xl bg-red-400 text-black px-6 rounded-lg">
+                            <h1 className="text-xl bg-red-400 text-black px-6 rounded-lg">
                               {home?.source}
                             </h1>
                           </div>
@@ -331,7 +362,7 @@ export const MainPage = () => {
             </div>
             <div className="sticky top-[80px] h-[calc(100vh-80px)]">
               <MapView
-                web3eventMap={allData}
+                allData={allData}
                 cityOptions={cityOptions}
                 citySearchTerm={citySearchTerm}
               />
