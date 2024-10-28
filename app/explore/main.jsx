@@ -8,6 +8,7 @@ import { useData } from "../hooks/useData";
 import { AutoComplete, Input, Button, DatePicker, Slider } from "antd";
 import PriceRangeSlider from "@/app/components/slider";
 import MapView from "@/app/components/map";
+import ScrollToTopButton from "@/app/components/totop";
 import axios from "axios";
 import moment from "moment";
 
@@ -328,7 +329,7 @@ export const MainPage = () => {
                 )}
               </div>
             </div>
-            <div className="">
+            <div className="sticky top-[80px] h-[calc(100vh-80px)]">
               <MapView
                 web3eventMap={allData}
                 cityOptions={cityOptions}
@@ -336,6 +337,7 @@ export const MainPage = () => {
               />
             </div>
           </div>
+          <ScrollToTopButton />
         </div>
       ) : (
         <LoadingComponent />
