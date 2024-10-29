@@ -163,16 +163,16 @@ const MapView = ({ allData, citySearchTerm }) => {
   };
 
   return (
-    <div className="px-6 mx-auto max-w-[100rem] lg:px-8 pt-1 h-screen">
-      <div className="w-full flex flex-col">
-        <SideBar
+    <div className="px-6 mx-auto max-w-[100rem] lg:px-8 h-screen">
+      <div className="w-full">
+        {/* <SideBar
           allData={allData}
           onTitleClick={homeListClickHandle}
           searchTerm={citySearchTerm}
           fetchLocationSuggestions={fetchLocationSuggestions}
           locationOptions={locationOptions}
           handleLocationSelect={handleLocationSelect}
-        />
+        /> */}
         <div id="allData" className="w-full h-[88vh] rounded-xl"></div>
       </div>
     </div>
@@ -271,12 +271,12 @@ const initializeMap = (map) => {
         popupHTML += `
           <div class="event-content">
             <div class="event-title">
-                ${count}. ${home?.properties?.price}
+             ${count}. ${home?.properties?.price}
             </div>
             <div class="event-detail">
               <div class="event-time">
                 <div class="event-clock"></div>
-                <p>${home?.properties?.address}</p>
+                <a href="${home?.properties?.home_url}" target="_blank"><p>${home?.properties?.address}</p></a>
               </div>
               <div class="event-place">
                 <div class="event-location"></div>
@@ -411,6 +411,7 @@ const convertPreDataToGeoJSON = (allData) => {
     type: "Feature",
     properties: {
       id: home.id,
+      home_url: home?.home_url,
       price: home?.price,
       address: home?.address,
       beds: home?.beds,

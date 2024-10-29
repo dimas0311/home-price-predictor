@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { getRedfinHomeData } from "../../utils/getredfinhomedata";
+import { getJamesEditionHomeData } from "../../utils/getjameseditionhomedata";
 import { getStateData } from "../../utils/getstatedata";
 
 const DataContext = createContext();
@@ -62,13 +63,21 @@ export const HomeDataProvider = ({ children }) => {
         return;
       }
 
-      const allHomeData = await getRedfinHomeData();
-      const prehomeData = allHomeData.filter(
+      const preJamesEditionHomeData = await getJamesEditionHomeData();
+      const jamesEditionHomeData = preJamesEditionHomeData.filter(
+        (home) => home.image_link !== "N/A"
+      );
+
+      console.log("preJamesEditionHomeData", preJamesEditionHomeData?.length);
+
+      const preRedfinHomeData = await getRedfinHomeData();
+      const redfinHomeData = preRedfinHomeData.filter(
         (home) =>
           home.image_link !==
           "https://ssl.cdn-redfin.com/photo/92/islphoto/870/genIslnoResize.3231870_0.jpg"
       );
-      const prestateData = await getStateData();
+
+      const stateData = await getStateData();
 
       function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -78,16 +87,23 @@ export const HomeDataProvider = ({ children }) => {
         return array;
       }
 
-      const combinedData = shuffleArray(prehomeData);
+      const combinedData = shuffleArray([
+        ...redfinHomeData,
+        ...jamesEditionHomeData,
+      ]);
+
+      const allHomeData = [...preRedfinHomeData, ...preJamesEditionHomeData];
+
+      console.log("allHomeData", allHomeData?.length);
 
       saveToStorage(ALL_STORE, allHomeData);
       saveToStorage(HOME_STORE, combinedData);
-      saveToStorage(STATE_STORE, prestateData);
+      saveToStorage(STATE_STORE, stateData);
       saveToStorage(TIMESTAMP_KEY, Date.now());
 
       setAllData(allHomeData);
       setHomeData(combinedData);
-      setStateData(prestateData);
+      setStateData(stateData);
     } catch (error) {
       console.error("Error fetching or caching data:", error);
     } finally {

@@ -302,22 +302,22 @@ export const MainPage = () => {
                               <br></br>
                             </div>
                           )}
-                          <div className="flex flex-row items-center justify-between space-x-1 mb-2">
+                          <div className="flex flex-row items-center justify-between mb-2">
                             <h1 className="text-xl font-semibold bg-yellow-400 rounded-lg text-black px-1">
                               {home?.price}
                             </h1>
                             {home?.beds ? (
-                              <span className="text-xl bg-purple-400 text-black rounded-lg truncate px-1">
+                              <span className="text-xl bg-purple-400 text-black rounded-lg truncate px-4">
                                 {home?.beds}
                               </span>
                             ) : (
                               <div></div>
                             )}
-                            <span className="text-xl bg-orange-400 text-black rounded-lg truncate px-1">
+                            <span className="text-xl bg-orange-400 text-black rounded-lg truncate px-4">
                               {home?.baths}
                             </span>
                             {home?.area ? (
-                              <span className="text-xl bg-lime-400 text-black rounded-lg truncate px-1">
+                              <span className="text-xl bg-lime-400 text-black rounded-lg truncate px-4">
                                 {home?.area} sq ft
                               </span>
                             ) : (
@@ -326,7 +326,7 @@ export const MainPage = () => {
                           </div>
 
                           <div className="flex flex-row items-center justify-center space-x-3">
-                            <h1 className="text-xl bg-green-400 text-black px-6  rounded-lg truncate">
+                            <h1 className="text-xl bg-green-400 text-black px-10  rounded-lg truncate">
                               {home?.city}
                             </h1>
                             <h1 className="text-xl bg-blue-400 text-black px-6 rounded-lg">
@@ -334,7 +334,7 @@ export const MainPage = () => {
                                 ? "UK"
                                 : home?.country}
                             </h1>
-                            <h1 className="text-xl bg-red-400 text-black px-6 rounded-lg">
+                            <h1 className="text-xl bg-red-400 text-black px-7 rounded-lg">
                               {home?.source}
                             </h1>
                           </div>
