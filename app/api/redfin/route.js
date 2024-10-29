@@ -29,29 +29,27 @@ export async function GET() {
     // Create a Map to store unique homes by URL
     const uniqueHomes = new Map();
 
-    const formattedHomeData = homeData
-      .filter(
-        (home) =>
-          home.image_link !==
-          "https://ssl.cdn-redfin.com/photo/92/islphoto/870/genIslnoResize.3231870_0.jpg"
-      )
-      .forEach((home) => {
-        // Only keep the first occurrence of each home_url
-        if (!uniqueHomes.has(home.home_url)) {
-          uniqueHomes.set(home.home_url, {
-            id: getHomeIdFromUrl(home?.home_url),
-            home_url: home?.home_url,
-            image_link: home?.image_link,
-            address: home?.address,
-            city: home?.city,
-            country: home?.address_country,
-            price: home?.price,
-            beds: home?.beds,
-            baths: home?.baths,
-            area: home?.area,
-          });
-        }
-      });
+    const formattedHomeData = homeData.forEach((home) => {
+      // Only keep the first occurrence of each home_url
+      if (!uniqueHomes.has(home.home_url)) {
+        uniqueHomes.set(home.home_url, {
+          key: getHomeIdFromUrl(home?.home_url),
+          id: getHomeIdFromUrl(home?.home_url),
+          home_url: home?.home_url,
+          image_link: home?.image_link,
+          address: home?.street_address,
+          city: home?.city,
+          country: home?.address_country,
+          latitude: home?.latitude,
+          longitude: home?.longitude,
+          price: home?.price,
+          beds: home?.beds,
+          baths: home?.baths,
+          area: home?.area,
+          source: "Redfin",
+        });
+      }
+    });
 
     // Convert Map values to array
     const uniqueHomeArray = Array.from(uniqueHomes.values());
