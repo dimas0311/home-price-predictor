@@ -43,7 +43,7 @@ export const MainPage = () => {
     new Set(
       homeData
         .map((home) => home?.city)
-        .filter((city) => city && city.trim() !== "")
+        .filter((city) => city && city.trim() !== "" && !/\d/.test(city)) // Added number check
     )
   )
     .map((city) => ({ value: city, label: city }))
@@ -303,21 +303,21 @@ export const MainPage = () => {
                             </div>
                           )}
                           <div className="flex flex-row items-center justify-between mb-2">
-                            <h1 className="text-xl font-semibold bg-yellow-400 rounded-lg text-black px-1">
+                            <h1 className="text-2xl font-semibold bg-yellow-400 rounded-lg text-black px-1">
                               {home?.price}
                             </h1>
                             {home?.beds ? (
-                              <span className="text-xl bg-purple-400 text-black rounded-lg truncate px-4">
+                              <span className="text-2xl bg-purple-400 text-black rounded-lg truncate px-2">
                                 {home?.beds}
                               </span>
                             ) : (
                               <div></div>
                             )}
-                            <span className="text-xl bg-orange-400 text-black rounded-lg truncate px-4">
+                            <span className="text-2xl bg-orange-400 text-black rounded-lg truncate px-2">
                               {home?.baths}
                             </span>
                             {home?.area ? (
-                              <span className="text-xl bg-lime-400 text-black rounded-lg truncate px-4">
+                              <span className="text-2xl bg-lime-400 text-black rounded-lg truncate px-1">
                                 {home?.area} sq ft
                               </span>
                             ) : (
@@ -326,15 +326,15 @@ export const MainPage = () => {
                           </div>
 
                           <div className="flex flex-row items-center justify-center space-x-3">
-                            <h1 className="text-xl bg-green-400 text-black px-10  rounded-lg truncate">
+                            <h1 className="text-2xl bg-green-400 text-black px-2  rounded-lg truncate">
                               {home?.city}
                             </h1>
-                            <h1 className="text-xl bg-blue-400 text-black px-6 rounded-lg">
+                            <h1 className="text-2xl bg-blue-400 text-black px-6 rounded-lg truncate">
                               {home?.country === "United Kingdom"
                                 ? "UK"
                                 : home?.country}
                             </h1>
-                            <h1 className="text-xl bg-red-400 text-black px-7 rounded-lg">
+                            <h1 className="text-2xl bg-red-400 text-black px-7 rounded-lg">
                               {home?.source}
                             </h1>
                           </div>
