@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { getRedfinHomeData } from "../../utils/getredfinhomedata";
 import { getJamesEditionHomeData } from "../../utils/getjameseditionhomedata";
+import { getRealEstateHomeData } from "../../utils/getrealestatehomedata";
 import { getStateData } from "../../utils/getstatedata";
 
 const DataContext = createContext();
@@ -63,12 +64,15 @@ export const HomeDataProvider = ({ children }) => {
         return;
       }
 
+      const preRealEstateHomeData = await getRealEstateHomeData();
+      const realEstateHomeData = preRealEstateHomeData.filter(
+        (home) => home.image_link !== "N/A"
+      );
+
       const preJamesEditionHomeData = await getJamesEditionHomeData();
       const jamesEditionHomeData = preJamesEditionHomeData.filter(
         (home) => home.image_link !== "N/A"
       );
-
-      console.log("preJamesEditionHomeData", preJamesEditionHomeData?.length);
 
       const preRedfinHomeData = await getRedfinHomeData();
       const redfinHomeData = preRedfinHomeData.filter(
@@ -90,11 +94,14 @@ export const HomeDataProvider = ({ children }) => {
       const combinedData = shuffleArray([
         ...redfinHomeData,
         ...jamesEditionHomeData,
+        ...realEstateHomeData,
       ]);
 
-      const allHomeData = [...preRedfinHomeData, ...preJamesEditionHomeData];
-
-      console.log("allHomeData", allHomeData?.length);
+      const allHomeData = [
+        ...preRedfinHomeData,
+        ...preJamesEditionHomeData,
+        ...preRealEstateHomeData,
+      ];
 
       saveToStorage(ALL_STORE, allHomeData);
       saveToStorage(HOME_STORE, combinedData);

@@ -33,11 +33,6 @@ export const MainPage = () => {
   useEffect(() => {
     setFilteredData(homeData);
   }, [homeData]);
-  console.log("hn", homeData?.length);
-  console.log("all_data", allData?.length);
-  // console.log("sn", stateData?.length);
-  // console.log("sn", stateData?.slice(0, 3));
-  // console.log("hn", homeData?.slice(0, 3));
 
   const cityOptions = Array.from(
     new Set(
@@ -73,9 +68,6 @@ export const MainPage = () => {
       setSelectedCityData(null);
     }
   };
-  // console.log("=============citySearchTerm===============", citySearchTerm);
-  // console.log("===========selectedCityData==============", selectedCityData);
-
   const handleClearSearch = () => {
     setBedsSearchTerm("");
     setBathsSearchTerm("");

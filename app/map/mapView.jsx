@@ -14,7 +14,6 @@ const MapView = ({ web3eventMap }) => {
     const [map, setMap] = useState(null);
     const [popup, setPopup] = useState(null);
     const [locationOptions, setLocationOptions] = useState([]);
-    console.log(web3eventMap.slice(0, 3), '==================')
 
     useEffect(() => {
         setPageIsMounted(true);
