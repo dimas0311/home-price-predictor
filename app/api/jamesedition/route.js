@@ -26,6 +26,12 @@ export async function GET() {
       return null;
     };
 
+    const roundArea = (area) => {
+      return Math.round(parseFloat(area));
+    };
+    const roundUsd = (price) => {
+      return Math.round(parseFloat(price));
+    };
     // Create a Map to store unique homes by URL
     const uniqueHomes = new Map();
 
@@ -48,10 +54,10 @@ export async function GET() {
           country: home?.address_country,
           latitude: home?.latitude,
           longitude: home?.longitude,
-          price: home?.price_usd,
+          price: home?.price_usd.split(".")[0],
           beds: home?.beds,
           baths: home?.baths,
-          area: home?.area_sqft,
+          area: home?.area_sqft.split(".")[0],
           source: "JamesEidtion",
         });
       }
