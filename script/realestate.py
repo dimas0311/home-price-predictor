@@ -202,7 +202,7 @@ def extract_listing_data(listing):
         return None
 
 
-def scrape_listings(base_urls, max_pages=160, output_file='real_estate_home_data.json'):
+def scrape_listings(base_urls, max_pages=160, output_file='realestate_home_data.json'):
     """Main function to scrape listings with real-time JSON updates and country skipping"""
     driver = initialize_driver()
 

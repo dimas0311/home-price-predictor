@@ -7,7 +7,7 @@ export async function GET() {
     const filePath = path.join(
       process.cwd(),
       "script",
-      "real_estate_data.json"
+      "realestate_home_data.json"
     );
     const jsonData = await fs.readFile(filePath, "utf8");
     const homeData = JSON.parse(jsonData);
