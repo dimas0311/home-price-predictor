@@ -86,8 +86,13 @@ cd home-price-predictor
 
 <h2 id="technologies-used">Technologies Used</h2>
 <ul>
-  <li><strong>Flask</strong>: Web framework for building the app</li>
+<li><strong>Next.js</strong>: Web framework for frontend</li>
+<li><strong>TailwindCss</strong>: Css library for frontend</li>
+<li><strong>Mapbox</strong>: Display home on mapbox</li>
+<li><strong>PosgtreSQL</strong>: Database</li>
+  <li><strong>Flask</strong>: Web framework for building server</li>
   <li><strong>scikit-learn</strong>: Machine learning algorithms and evaluation metrics</li>
+  <li><strong>selenium</strong>: Home data scraping from several realestate sites</li>
   <li><strong>pandas</strong>: Data manipulation and cleaning</li>
   <li><strong>matplotlib/plotly</strong>: Data visualization</li>
 </ul>
