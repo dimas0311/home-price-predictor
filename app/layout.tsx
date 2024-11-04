@@ -17,7 +17,6 @@ const poppins  = Localfont({
 })
 
 export const metadata: Metadata = {
-  // title: "CommuneAI web3event Map",
   title: "World Home Price Predictor App",
   description: "you can find home price and predict in the work",
 };
