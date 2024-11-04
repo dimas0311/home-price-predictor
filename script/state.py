@@ -92,10 +92,10 @@ def scrape_redfin_states(state_urls):
                 logging.error(traceback.format_exc())
         
         # Save all results to a single JSON file
-        with open("home_analyze_data.json", "w") as json_file:
+        with open("state_data.json", "w") as json_file:
             json.dump(results, json_file, indent=4)
         
-        logging.info("All data successfully scraped and saved to home_analyze_data.json")
+        logging.info("All data successfully scraped and saved to state_data.json")
 
     except Exception as e:
         logging.error(f"An unexpected error occurred: {str(e)}")

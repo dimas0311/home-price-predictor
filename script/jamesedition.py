@@ -163,7 +163,7 @@ class JamesEditionScraper:
         self.driver = uc.Chrome(options=options)
         self.wait = WebDriverWait(self.driver, 15)  # Increased wait time
         self.eur_to_usd_rate = 1.08
-        self.json_filename = f'jamesedition_listings_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+        self.json_filename = 'jamesedition_home_data.json'
 
         self.coordinate_cache = {}
         self.locality_coordinates = defaultdict(list)

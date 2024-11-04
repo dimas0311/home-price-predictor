@@ -20,14 +20,14 @@ def setup_driver():
         print(f"Error setting up driver: {str(e)}")
         return None
 
-def create_json(filename='home_data.json'):
+def create_json(filename='redfin_home_data.json'):
     try:
         with open(filename, 'w', encoding='utf-8') as jsonfile:
             json.dump([], jsonfile)
     except Exception as e:
         print(f"Error creating JSON file: {str(e)}")
 
-def append_to_json(property_data, filename='home_data.json'):
+def append_to_json(property_data, filename='redfin_home_data.json'):
     try:
         with open(filename, 'r+', encoding='utf-8') as jsonfile:
             data = json.load(jsonfile)
@@ -221,7 +221,7 @@ def main():
     base_urls = [f"https://www.redfin.com/city/{i}/" for i in range(3, 20001)]
     
     driver = setup_driver()
-    json_filename = 'home_data.json'
+    json_filename = 'redfin_home_data.json'
     create_json(json_filename)
     total_properties = 0
 
