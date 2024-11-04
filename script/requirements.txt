@@ -1,3 +1,13 @@
 selenium
 csv
 time
+fake_useragent
+undetected_chromedriver
+geopy
+pycountry
+flask 
+flask-cors 
+pandas 
+xgboost 
+scikit-learn 
+joblib

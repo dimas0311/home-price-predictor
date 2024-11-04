@@ -11,6 +11,123 @@ import re
 import random
 from fake_useragent import UserAgent
 import undetected_chromedriver as uc
+import random
+from collections import defaultdict
+
+COUNTRY_COORDINATES = {
+    'Spain': {
+        'Madrid': (40.4168, -3.7038),
+        'Barcelona': (41.3851, 2.1734),
+        'Marbella': (36.5097, -4.8867),
+        'Mallorca': (39.6953, 3.0176),
+        'Ibiza': (38.9067, 1.4206),
+        'Valencia': (39.4699, -0.3763)
+    },
+    'Italy': {
+        'Rome': (41.9028, 12.4964),
+        'Milan': (45.4642, 9.1900),
+        'Venice': (45.4408, 12.3155),
+        'Florence': (43.7696, 11.2558),
+        'Lake Como': (45.9937, 9.2706),
+        'Tuscany': (43.7711, 11.2486)
+    },
+    'France': {
+        'Paris': (48.8566, 2.3522),
+        'Nice': (43.7102, 7.2620),
+        'Cannes': (43.5528, 7.0174),
+        'Saint-Tropez': (43.2727, 6.6386),
+        'Provence': (43.9332, 6.0679),
+        'French Riviera': (43.7034, 7.2663)
+    },
+    'Portugal': {
+        'Lisbon': (38.7223, -9.1393),
+        'Porto': (41.1579, -8.6291),
+        'Algarve': (37.0179, -7.9304),
+        'Madeira': (32.7607, -16.9595),
+        'Cascais': (38.6967, -9.4207),
+        'Sintra': (38.8029, -9.3817)
+    },
+    'Canada': {
+        'Toronto': (43.6532, -79.3832),
+        'Vancouver': (49.2827, -123.1207),
+        'Montreal': (45.5017, -73.5673),
+        'Whistler': (50.1163, -122.9574),
+        'Victoria': (48.4284, -123.3656),
+        'Calgary': (51.0447, -114.0719)
+    },
+    'United Kingdom': {
+        'London': (51.5074, -0.1278),
+        'Edinburgh': (55.9533, -3.1883),
+        'Bath': (51.3758, -2.3599),
+        'Cotswolds': (51.9308, -1.7028),
+        'Oxford': (51.7520, -1.2577),
+        'Cambridge': (52.2053, 0.1218)
+    },
+    'Greece': {
+        'Athens': (37.9838, 23.7275),
+        'Santorini': (36.3932, 25.4615),
+        'Mykonos': (37.4415, 25.3667),
+        'Crete': (35.2401, 24.8093),
+        'Rhodes': (36.4341, 28.2176),
+        'Corfu': (39.6243, 19.9217)
+    },
+    'Switzerland': {
+        'Zurich': (47.3769, 8.5417),
+        'Geneva': (46.2044, 6.1432),
+        'Zermatt': (46.0207, 7.7491),
+        'St. Moritz': (46.4908, 9.8355),
+        'Lugano': (46.0037, 8.9511),
+        'Gstaad': (46.4750, 7.2858)
+    },
+    'United Arab Emirates': {
+        'Dubai': (25.2048, 55.2708),
+        'Abu Dhabi': (24.4539, 54.3773),
+        'Palm Jumeirah': (25.1124, 55.1390),
+        'Jumeirah Beach': (25.2048, 55.2708),
+        'Dubai Marina': (25.0777, 55.1339),
+        'Yas Island': (24.4979, 54.6047)
+    },
+    'Mexico': {
+        'Cabo San Lucas': (22.8905, -109.9167),
+        'Cancun': (21.1619, -86.8515),
+        'Tulum': (20.2114, -87.4654),
+        'Puerto Vallarta': (20.6534, -105.2253),
+        'Mexico City': (19.4326, -99.1332),
+        'Playa del Carmen': (20.6296, -87.0739)
+    },
+    'South Africa': {
+        'Cape Town': (-33.9249, 18.4241),
+        'Johannesburg': (-26.2041, 28.0473),
+        'Durban': (-29.8587, 31.0218),
+        'Stellenbosch': (-33.9321, 18.8602),
+        'Camps Bay': (-33.9555, 18.3795),
+        'Clifton': (-33.9430, 18.3759)
+    },
+    'Australia': {
+        'Sydney': (-33.8688, 151.2093),
+        'Melbourne': (-37.8136, 144.9631),
+        'Gold Coast': (-28.0167, 153.4000),
+        'Perth': (-31.9505, 115.8605),
+        'Byron Bay': (-28.6474, 153.6020),
+        'Port Douglas': (-16.4834, 145.4649)
+    },
+    'Germany': {
+        'Berlin': (52.5200, 13.4050),
+        'Munich': (48.1351, 11.5820),
+        'Hamburg': (53.5511, 9.9937),
+        'Frankfurt': (50.1109, 8.6821),
+        'Baden-Baden': (48.7604, 8.2408),
+        'Sylt': (54.9079, 8.3158)
+    },
+    'Netherlands': {
+        'Amsterdam': (52.3676, 4.9041),
+        'Rotterdam': (51.9244, 4.4777),
+        'The Hague': (52.0705, 4.3007),
+        'Utrecht': (52.0907, 5.1214),
+        'Haarlem': (52.3873, 4.6462),
+        'Wassenaar': (52.1459, 4.4017)
+    }
+}
 
 
 class JamesEditionScraper:
@@ -47,6 +164,9 @@ class JamesEditionScraper:
         self.wait = WebDriverWait(self.driver, 15)  # Increased wait time
         self.eur_to_usd_rate = 1.08
         self.json_filename = f'jamesedition_listings_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+
+        self.coordinate_cache = {}
+        self.locality_coordinates = defaultdict(list)
 
         # Initialize JSON file with empty array
         with open(self.json_filename, 'w', encoding='utf-8') as f:
@@ -142,8 +262,95 @@ class JamesEditionScraper:
         except Exception as e:
             print(f"Error saving listing to JSON: {str(e)}")
 
+    def clean_locality(self, locality):
+        """Remove prefixes like 'House in' from locality"""
+        prefixes_to_remove = [
+            'House in ',
+            'Villa in ',
+            'Apartment in ',
+            'Condo in ',
+            'Estate in ',
+            'Property in ',
+            'Country House in ',
+            'Penthouse in '
+        ]
+
+        cleaned_locality = locality
+        for prefix in prefixes_to_remove:
+            if cleaned_locality.startswith(prefix):
+                cleaned_locality = cleaned_locality[len(prefix):]
+                break
+
+        return cleaned_locality
+
+    def get_base_coordinates(self, address_locality, country):
+        """Get base coordinates for a locality, using fuzzy matching for the specific country"""
+        clean_locality = address_locality.lower().strip()
+
+        # Check if we have coordinates for this country
+        if country in COUNTRY_COORDINATES:
+            # Try to match with known cities in the country
+            for city, coords in COUNTRY_COORDINATES[country].items():
+                if city.lower() in clean_locality or clean_locality in city.lower():
+                    return coords
+
+            # If no specific city match found, return coordinates of the first city as default
+            return next(iter(COUNTRY_COORDINATES[country].values()))
+
+        # If country not found in coordinates, use a default central point
+        print(f"Warning: No coordinates found for country: {country}")
+        return (0.0, 0.0)  # Default to null island if no match found
+
+    def generate_random_nearby_coordinates(self, base_lat, base_lon, radius_km=105):
+        """Generate random coordinates within a radius of base coordinates"""
+        # Convert radius from km to degrees (approximate)
+        radius_deg = radius_km / 111.32  # 1 degree is approximately 111.32 km
+
+        # Generate random offsets
+        lat_offset = random.uniform(-radius_deg, radius_deg)
+        lon_offset = random.uniform(-radius_deg, radius_deg)
+
+        # Add offsets to base coordinates
+        new_lat = base_lat + lat_offset
+        new_lon = base_lon + lon_offset
+
+        return (round(new_lat, 6), round(new_lon, 6))
+
+    def get_coordinates_for_locality(self, address_locality, full_address, country):
+        """Get or generate coordinates for a locality while maintaining consistency"""
+        # Create a unique key for this exact location
+        location_key = f"{address_locality}_{full_address}_{country}"
+
+        # Return cached coordinates if they exist
+        if location_key in self.coordinate_cache:
+            return self.coordinate_cache[location_key]
+
+        # Get base coordinates for the locality in the specific country
+        base_lat, base_lon = self.get_base_coordinates(
+            address_locality, country)
+
+        # Generate new coordinates
+        new_coords = self.generate_random_nearby_coordinates(
+            base_lat, base_lon)
+
+        # Ensure the new coordinates are unique for this locality
+        max_attempts = 10
+        attempt = 0
+        while (new_coords in self.locality_coordinates[address_locality] and
+               attempt < max_attempts):
+            new_coords = self.generate_random_nearby_coordinates(
+                base_lat, base_lon)
+            attempt += 1
+
+        # Store the coordinates
+        self.locality_coordinates[address_locality].append(new_coords)
+        self.coordinate_cache[location_key] = new_coords
+
+        return new_coords
+
     def extract_listing_data(self, listing):
         try:
+
             time.sleep(random.uniform(0.5, 1.5))
 
             # Scroll element into view and wait for it to load
@@ -221,14 +428,16 @@ class JamesEditionScraper:
             # Extract address (unchanged)
             title_element = listing.find_element(
                 By.CLASS_NAME, 'ListingCard__title')
-            full_address = title_element.text.strip()
+            full_address = self.clean_locality(title_element.text.strip())
             address_parts = full_address.split(', ')
 
-            address_locality = address_parts[0] if len(
-                address_parts) > 0 else ''
+            address_locality = self.clean_locality(
+                address_parts[0]) if len(address_parts) > 0 else ''
             address_region = address_parts[1] if len(address_parts) > 1 else ''
             address_country = address_parts[-1] if len(
                 address_parts) > 2 else ''
+            latitude, longitude = self.get_coordinates_for_locality(
+                address_locality, full_address, address_country)
 
             # Get listing URL
             home_url = listing.find_element(
@@ -245,6 +454,8 @@ class JamesEditionScraper:
                 'area_sqm': area_sqm,
                 'area_sqft': area_sqft,
                 'price_value': price_value,
+                'latitude': latitude,
+                'longitude': longitude,
                 'address_locality': address_locality,
                 'address_region': address_region,
                 'address_country': address_country,
@@ -408,31 +619,56 @@ class JamesEditionScraper:
         self.driver.quit()
 
 
-def main():
-    base_urls = ["https://www.jamesedition.com/real_estate/mexico?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",]
-    "",
-    "",
+def get_base_urls():
+    """Returns a dictionary of base URLs for different countries"""
+    countries = {
+        "Spain": "https://www.jamesedition.com/real_estate/spain",
+        "Italy": "https://www.jamesedition.com/real_estate/italy",
+        "France": "https://www.jamesedition.com/real_estate/france",
+        "Portugal": "https://www.jamesedition.com/real_estate/portugal",
+        "Canada": "https://www.jamesedition.com/real_estate/canada",
+        "United Kingdom": "https://www.jamesedition.com/real_estate/united-kingdom",
+        "Greece": "https://www.jamesedition.com/real_estate/greece",
+        "Switzerland": "https://www.jamesedition.com/real_estate/switzerland",
+        "United Arab Emirates": "https://www.jamesedition.com/real_estate/united-arab-emirates",
+        "Mexico": "https://www.jamesedition.com/real_estate/mexico",
+        "South Africa": "https://www.jamesedition.com/real_estate/south-africa",
+        "Australia": "https://www.jamesedition.com/real_estate/australia",
+        "Germany": "https://www.jamesedition.com/real_estate/germany",
+        "Netherlands": "https://www.jamesedition.com/real_estate/netherlands"
+    }
 
+    # Add common query parameters to each URL
+    base_params = "?real_estate_type[]=house&eur_price_cents_from=49000000&eur_price_cents_to=83706300&page={pageNumber}"
+    return {country: url + base_params for country, url in countries.items()}
+
+
+def main():
+    base_urls = get_base_urls()
     scraper = JamesEditionScraper()
+
     try:
         print(
             f"Starting scraping... Output will be saved to: {scraper.json_filename}")
 
-        # Scrape pages with more conservative range
-        listings_data = scraper.scrape_all_pages(base_url, 1, 50)
+        all_listings = []
+        for country, base_url in base_urls.items():
+            print(f"\nScraping {country}...")
+            try:
+                listings_data = scraper.scrape_all_pages(base_url, 1, 50)
+                all_listings.extend(listings_data)
+                print(
+                    f"Completed scraping {country}. Found {len(listings_data)} listings.")
+            except Exception as e:
+                print(f"Error scraping {country}: {str(e)}")
+                continue
 
-        print(f"\nScraping completed.")
+        print(f"\nScraping completed for all countries.")
         print(f"Total listings processed: {scraper.total_listings_processed}")
         print(f"Data saved to {scraper.json_filename}")
 
     except Exception as e:
-        print(f"Error during scraping: {str(e)}")
+        print(f"Fatal error during scraping: {str(e)}")
     finally:
         scraper.close()
 
